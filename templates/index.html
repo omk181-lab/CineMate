@@ -15,7 +15,6 @@
             
             <h3>Rate the Following Movies:</h3>
             <div id="movie-list">
-                <!-- Movie titles with rating inputs -->
                 {% for movie in movies %}
                 <div class="movie">
                     <label>{{ movie['title'] }}</label>
@@ -33,6 +32,20 @@
             
             <button type="submit">Get Recommendations</button>
         </form>
+        
+        <div id="genre-selection">
+            <h3>Or Select Your Favorite Genres:</h3>
+            <div>
+                <label><input type="checkbox" name="genre" value="Action"> Action</label>
+                <label><input type="checkbox" name="genre" value="Comedy"> Comedy</label>
+                <label><input type="checkbox" name="genre" value="Drama"> Drama</label>
+                <label><input type="checkbox" name="genre" value="Romance"> Romance</label>
+                <label><input type="checkbox" name="genre" value="Horror"> Horror</label>
+                <label><input type="checkbox" name="genre" value="Sci-Fi"> Sci-Fi</label>
+            </div>
+            <button id="no-movies" type="button">I Haven't Watched These Movies</button>
+        </div>
+
         <div id="recommendations"></div>
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
