@@ -26,3 +26,27 @@ document.getElementById("rating-form").addEventListener("submit", async function
         recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
     }
 });
+
+document.getElementById("no-movies").addEventListener("click", async function () {
+    const selectedGenres = Array.from(document.querySelectorAll("input[name='genre']:checked"))
+        .map(checkbox => checkbox.value);
+
+    const response = await fetch("/recommend-genres", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ genres: selectedGenres }),
+    });
+
+    const data = await response.json();
+    const recommendationsDiv = document.getElementById("recommendations");
+
+    if (data.recommendations) {
+        recommendationsDiv.innerHTML = "<h3>Recommendations:</h3><ul>" +
+            data.recommendations.map(movie => `<li>${movie}</li>`).join("") +
+            "</ul>";
+    } else {
+        recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
+    }
+});
