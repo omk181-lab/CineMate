@@ -2,7 +2,10 @@ document.getElementById("rating-form").addEventListener("submit", async function
     event.preventDefault();
 
     const userId = document.getElementById("userId").value;
-    const movieRatings = document.getElementById("movieRatings").value;
+    const movieRatings = Array.from(document.querySelectorAll(".rating"))
+        .filter(select => select.value) // Only include rated movies
+        .map(select => `${select.dataset.movieId}:${select.value}`)
+        .join(",");
 
     const response = await fetch("/recommend", {
         method: "POST",
