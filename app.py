@@ -1,61 +1,41 @@
-from flask import Flask, request, jsonify, render_template
-import pickle
-import os
+from flask import Flask, request, jsonify
 import pandas as pd
+import pickle
 
-# Initialize Flask app
 app = Flask(__name__)
 
-# Load the trained SVD model
-MODEL_PATH = "svd_model.pkl"
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"Model file '{MODEL_PATH}' not found.")
+# Load the trained SVD model and movie data
+with open('svd_model.pkl', 'rb') as f:
+    svd = pickle.load(f)
 
-with open(MODEL_PATH, "rb") as f:
-    model = pickle.load(f)
+movies_df = pd.read_csv("movies.csv")
 
-# Load movies and ratings datasets
-MOVIES_PATH = "movies.csv"
-RATINGS_PATH = "ratings.csv"
-
-movies = pd.read_csv(MOVIES_PATH)
-ratings = pd.read_csv(RATINGS_PATH)
-
-# Add average ratings to the movies DataFrame
-avg_ratings = ratings.groupby("movieId")["rating"].mean().reset_index()
-avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
-movies = movies.merge(avg_ratings, on="movieId", how="left")
-movies["avg_rating"].fillna(0, inplace=True)
-
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-
-@app.route("/recommend", methods=["GET"])
+@app.route('/recommend', methods=['POST'])
 def recommend():
-    try:
-        user_id = int(request.args.get("user_id"))
+    data = request.json
+    user_id = int(data.get("userId"))
+    movie_ratings = data.get("movieRatings", "")
+    
+    # Parse user ratings input
+    if movie_ratings:
+        for rating in movie_ratings.split(","):
+            movie_id, user_rating = map(float, rating.split(":"))
+            # Optionally, integrate new user ratings into the system (skipped here for simplicity)
+    
+    # Generate top-N recommendations
+    all_movie_ids = movies_df['movieId'].unique()
+    predictions = [
+        (movie_id, svd.predict(user_id, movie_id).est)
+        for movie_id in all_movie_ids
+    ]
+    top_movies = sorted(predictions, key=lambda x: x[1], reverse=True)[:10]
+    recommended_titles = [
+        movies_df[movies_df['movieId'] == movie_id]['title'].values[0]
+        for movie_id, _ in top_movies
+    ]
 
-        # Predict ratings for all movies
-        recommendations = []
-        for movie_id in movies["movieId"]:
-            pred = model.predict(user_id, movie_id)
-            recommendations.append((movie_id, pred.est))
+    return jsonify({"recommendations": recommended_titles})
 
-        # Sort recommendations by predicted rating
-        recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:10]
-
-        # Retrieve movie details for recommendations
-        recommended_movies = movies[movies["movieId"].isin([r[0] for r in recommendations])]
-        response = recommended_movies[["movieId", "title", "genres", "avg_rating"]].to_dict(orient="records")
-
-        return jsonify(response)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
