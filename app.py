@@ -1,28 +1,32 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import pickle
 
 app = Flask(__name__)
 
-# Load the trained SVD model and movie data
-with open('svd_model_10_dec.pkl', 'rb') as f:
+# Load the trained model and datasets
+with open('svd_model.pkl', 'rb') as f:
     svd = pickle.load(f)
 
 movies_df = pd.read_csv("movies.csv")
 
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 @app.route('/recommend', methods=['POST'])
 def recommend():
-    data = request.json
+    data = request.get_json()
     user_id = int(data.get("userId"))
     movie_ratings = data.get("movieRatings", "")
-    
-    # Parse user ratings input
+
+    # Process user inputs
     if movie_ratings:
         for rating in movie_ratings.split(","):
             movie_id, user_rating = map(float, rating.split(":"))
-            # Optionally, integrate new user ratings into the system (skipped here for simplicity)
-    
-    # Generate top-N recommendations
+            # Add new user ratings logic if needed
+
+    # Generate recommendations
     all_movie_ids = movies_df['movieId'].unique()
     predictions = [
         (movie_id, svd.predict(user_id, movie_id).est)
