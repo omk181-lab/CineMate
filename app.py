@@ -1,10 +1,11 @@
+import os
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import pickle
 
 app = Flask(__name__)
 
-# Load the trained model and datasets
+# Load the trained model and dataset
 with open('svd_model.pkl', 'rb') as f:
     svd = pickle.load(f)
 
@@ -24,7 +25,7 @@ def recommend():
     if movie_ratings:
         for rating in movie_ratings.split(","):
             movie_id, user_rating = map(float, rating.split(":"))
-            # Add new user ratings logic if needed
+            # Add logic for saving user ratings if necessary
 
     # Generate recommendations
     all_movie_ids = movies_df['movieId'].unique()
@@ -39,3 +40,8 @@ def recommend():
     ]
 
     return jsonify({"recommendations": recommended_titles})
+
+if __name__ == '__main__':
+    # Use Render's PORT environment variable in production
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
