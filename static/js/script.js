@@ -1,26 +1,25 @@
-document.getElementById("recommendationForm").addEventListener("submit", async (event) => {
-    event.preventDefault(); // Prevent form from reloading the page
+document.getElementById("rating-form").addEventListener("submit", async function (event) {
+    event.preventDefault();
 
-    const userId = document.getElementById("user_id").value;
+    const userId = document.getElementById("userId").value;
+    const movieRatings = document.getElementById("movieRatings").value;
+
+    const response = await fetch("/recommend", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, movieRatings }),
+    });
+
+    const data = await response.json();
     const recommendationsDiv = document.getElementById("recommendations");
 
-    try {
-        const response = await fetch(`/recommend?user_id=${userId}`);
-        const data = await response.json();
-
-        // Display recommendations
-        if (data.error) {
-            recommendationsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
-        } else {
-            recommendationsDiv.innerHTML = "<h2>Recommended Movies:</h2>";
-            data.forEach(movie => {
-                recommendationsDiv.innerHTML += `
-                    <p><strong>${movie.title}</strong> (${movie.avg_rating.toFixed(1)} ⭐)
-                    <br>Genres: ${movie.genres}</p>
-                `;
-            });
-        }
-    } catch (error) {
-        recommendationsDiv.innerHTML = `<p>Error fetching recommendations. Please try again.</p>`;
+    if (data.recommendations) {
+        recommendationsDiv.innerHTML = "<h3>Recommendations:</h3><ul>" +
+            data.recommendations.map(movie => `<li>${movie}</li>`).join("") +
+            "</ul>";
+    } else {
+        recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
     }
 });
