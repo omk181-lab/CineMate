@@ -39,7 +39,3 @@ def recommend():
     ]
 
     return jsonify({"recommendations": recommended_titles})
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True)
