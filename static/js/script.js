@@ -1,52 +1,41 @@
-document.getElementById("rating-form").addEventListener("submit", async function (event) {
-    event.preventDefault();
-
-    const userId = document.getElementById("userId").value;
-    const movieRatings = Array.from(document.querySelectorAll(".rating"))
-        .filter(select => select.value) // Only include rated movies
-        .map(select => `${select.dataset.movieId}:${select.value}`)
-        .join(",");
-
-    const response = await fetch("/recommend", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId, movieRatings }),
-    });
-
+// New User Flow
+document.getElementById("new-user").addEventListener("click", async function () {
+    const response = await fetch("/generate-user-id");
     const data = await response.json();
-    const recommendationsDiv = document.getElementById("recommendations");
+    const userId = data.userId;
 
-    if (data.recommendations) {
-        recommendationsDiv.innerHTML = "<h3>Recommendations:</h3><ul>" +
-            data.recommendations.map(movie => `<li>${movie}</li>`).join("") +
-            "</ul>";
-    } else {
-        recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
-    }
+    // Display the generated User ID
+    document.getElementById("generatedUserId").innerText = userId;
+    document.getElementById("new-user-section").style.display = "block";
+
+    // Save User ID to localStorage for future use
+    localStorage.setItem("userId", userId);
 });
 
-document.getElementById("no-movies").addEventListener("click", async function () {
-    const selectedGenres = Array.from(document.querySelectorAll("input[name='genre']:checked"))
-        .map(checkbox => checkbox.value);
+// Copy User ID
+document.getElementById("copy-user-id").addEventListener("click", function () {
+    const userId = document.getElementById("generatedUserId").innerText;
+    navigator.clipboard.writeText(userId);
+    alert("User ID copied to clipboard!");
+});
 
-    const response = await fetch("/recommend-genres", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ genres: selectedGenres }),
-    });
+// Existing User Flow
+document.getElementById("existing-user").addEventListener("click", function () {
+    document.getElementById("existing-user-section").style.display = "block";
+});
 
+// Fetch Recommendations for Existing User
+document.getElementById("fetch-history").addEventListener("click", async function () {
+    const userId = document.getElementById("existingUserId").value;
+    const response = await fetch(`/fetch-history/${userId}`);
     const data = await response.json();
     const recommendationsDiv = document.getElementById("recommendations");
 
-    if (data.recommendations) {
-        recommendationsDiv.innerHTML = "<h3>Recommendations:</h3><ul>" +
+    if (data.recommendations.length > 0) {
+        recommendationsDiv.innerHTML = "<h3>Your Past Recommendations:</h3><ul>" +
             data.recommendations.map(movie => `<li>${movie}</li>`).join("") +
             "</ul>";
     } else {
-        recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
+        recommendationsDiv.innerHTML = "<p>No recommendations found for this User ID.</p>";
     }
 });
