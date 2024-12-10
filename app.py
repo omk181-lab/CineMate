@@ -1,44 +1,61 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import pickle
 import os
+import pandas as pd
 
+# Initialize Flask app
 app = Flask(__name__)
 
-# Load the trained model
-MODEL_PATH = 'svd_model.pkl'
+# Load the trained SVD model
+MODEL_PATH = "svd_model.pkl"
 if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"Model file '{MODEL_PATH}' not found. Ensure the model is trained and saved.")
+    raise FileNotFoundError(f"Model file '{MODEL_PATH}' not found.")
 
-with open(MODEL_PATH, 'rb') as f:
+with open(MODEL_PATH, "rb") as f:
     model = pickle.load(f)
+
+# Load movies and ratings datasets
+MOVIES_PATH = "movies.csv"
+RATINGS_PATH = "ratings.csv"
+
+movies = pd.read_csv(MOVIES_PATH)
+ratings = pd.read_csv(RATINGS_PATH)
+
+# Add average ratings to the movies DataFrame
+avg_ratings = ratings.groupby("movieId")["rating"].mean().reset_index()
+avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
+movies = movies.merge(avg_ratings, on="movieId", how="left")
+movies["avg_rating"].fillna(0, inplace=True)
+
 
 @app.route("/")
 def home():
-    return "<h1>Movie Recommendation System</h1><p>Welcome to the Movie Recommendation System API!</p>"
+    return render_template("index.html")
 
-@app.route("/predict", methods=["GET"])
-def predict():
-    """
-    API endpoint for predicting movie ratings.
-    Expects 'user_id' and 'movie_id' as query parameters.
-    """
+
+@app.route("/recommend", methods=["GET"])
+def recommend():
     try:
-        # Get user_id and movie_id from the query parameters
         user_id = int(request.args.get("user_id"))
-        movie_id = int(request.args.get("movie_id"))
 
-        # Predict the rating
-        prediction = model.predict(user_id, movie_id)
+        # Predict ratings for all movies
+        recommendations = []
+        for movie_id in movies["movieId"]:
+            pred = model.predict(user_id, movie_id)
+            recommendations.append((movie_id, pred.est))
 
-        # Return the predicted rating
-        return jsonify({
-            "user_id": user_id,
-            "movie_id": movie_id,
-            "predicted_rating": round(prediction.est, 2)
-        })
+        # Sort recommendations by predicted rating
+        recommendations = sorted(recommendations, key=lambda x: x[1], reverse=True)[:10]
+
+        # Retrieve movie details for recommendations
+        recommended_movies = movies[movies["movieId"].isin([r[0] for r in recommendations])]
+        response = recommended_movies[["movieId", "title", "genres", "avg_rating"]].to_dict(orient="records")
+
+        return jsonify(response)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
 if __name__ == "__main__":
-    print("Starting Flask Application...")
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

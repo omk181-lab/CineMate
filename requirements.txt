@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 asttokens==3.0.0
+=======
+scikit-surprise
+asttokens==3.0.0
+gunicorn==20.1.0
+>>>>>>> 51e74b7e99916acddf26bfde74b254b1a15cce0d
 attrs==24.2.0
 backcall==0.2.0
 beautifulsoup4==4.12.3
@@ -55,7 +61,10 @@ pyparsing==3.0.9
 PyPDF2==3.0.1
 python-dateutil==2.8.2
 pytz==2022.7.1
+<<<<<<< HEAD
 pywin32==308
+=======
+>>>>>>> 51e74b7e99916acddf26bfde74b254b1a15cce0d
 pyzmq==26.2.0
 referencing==0.35.1
 requests==2.28.2
