@@ -13,7 +13,11 @@ movies_df = pd.read_csv("movies.csv")
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # Get a list of popular movies (e.g., top-rated or most-rated)
+    popular_movies = movies_df.sample(10)  # Random sample for now
+    movies = popular_movies[['movieId', 'title']].to_dict(orient='records')
+    return render_template('index.html', movies=movies)
+
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
