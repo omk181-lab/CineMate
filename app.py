@@ -5,7 +5,7 @@ import pickle
 app = Flask(__name__)
 
 # Load the trained SVD model and movie data
-with open('svd_model.pkl', 'rb') as f:
+with open('svd_model_10_dec.pkl', 'rb') as f:
     svd = pickle.load(f)
 
 movies_df = pd.read_csv("movies.csv")
