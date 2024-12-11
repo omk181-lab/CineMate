@@ -2,76 +2,65 @@ import os
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import pickle
-import sqlite3
-import uuid
 
 app = Flask(__name__)
 
-DATABASE = 'recommendation.db'
+# Load the trained model and datasets
+with open('svd_model.pkl', 'rb') as f:
+    svd = pickle.load(f)
 
-# Initialize database
-def setup_database():
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    # Create Users table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Users (
-            userId TEXT PRIMARY KEY,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-
-    # Create Recommendations table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Recommendations (
-            recordId INTEGER PRIMARY KEY AUTOINCREMENT,
-            userId TEXT,
-            recommended_movies TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(userId) REFERENCES Users(userId)
-        )
-    ''')
-
-    conn.commit()
-    conn.close()
-
-setup_database()
+movies_df = pd.read_csv("movies.csv")
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # Get a list of popular movies (randomly selected for now)
+    popular_movies = movies_df.sample(10)  # Random selection of 10 movies
+    movies = popular_movies[['movieId', 'title']].to_dict(orient='records')
+    return render_template('index.html', movies=movies)
 
-@app.route('/generate-user-id', methods=['GET'])
-def generate_user_id():
-    unique_id = str(uuid.uuid4())[:8]
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
+@app.route('/recommend', methods=['POST'])
+def recommend():
+    data = request.get_json()
+    user_id = int(data.get("userId"))
+    movie_ratings = data.get("movieRatings", "")
 
-    cursor.execute("SELECT COUNT(*) FROM Users WHERE userId = ?", (unique_id,))
-    while cursor.fetchone()[0] > 0:
-        unique_id = str(uuid.uuid4())[:8]
+    # Process user inputs
+    if movie_ratings:
+        for rating in movie_ratings.split(","):
+            movie_id, user_rating = map(float, rating.split(":"))
 
-    cursor.execute("INSERT INTO Users (userId) VALUES (?)", (unique_id,))
-    conn.commit()
-    conn.close()
+    # Generate recommendations
+    all_movie_ids = movies_df['movieId'].unique()
+    predictions = [
+        (movie_id, svd.predict(user_id, movie_id).est)
+        for movie_id in all_movie_ids
+    ]
+    top_movies = sorted(predictions, key=lambda x: x[1], reverse=True)[:10]
+    recommended_titles = [
+        movies_df[movies_df['movieId'] == movie_id]['title'].values[0]
+        for movie_id, _ in top_movies
+    ]
 
-    return jsonify({"userId": unique_id})
+    return jsonify({"recommendations": recommended_titles})
 
-@app.route('/fetch-history/<user_id>', methods=['GET'])
-def fetch_history(user_id):
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
+@app.route('/recommend-genres', methods=['POST'])
+def recommend_genres():
+    data = request.get_json()
+    selected_genres = data.get("genres", [])
 
-    cursor.execute("SELECT recommended_movies FROM Recommendations WHERE userId = ?", (user_id,))
-    rows = cursor.fetchall()
+    if not selected_genres:
+        return jsonify({"recommendations": []})
 
-    recommendations = []
-    for row in rows:
-        recommendations.extend(row[0].split(','))
+    # Filter movies by selected genres
+    recommended_movies = movies_df[movies_df['genres'].apply(
+        lambda x: any(genre in x for genre in selected_genres)
+    )]
 
-    conn.close()
-    return jsonify({"recommendations": recommendations})
+    # Return top 10 trending or random movies from the selected genres
+    top_movies = recommended_movies.sample(10) if len(recommended_movies) > 10 else recommended_movies
+    recommended_titles = top_movies['title'].tolist()
+
+    return jsonify({"recommendations": recommended_titles})
 
 if __name__ == '__main__':
     # Use Render's PORT environment variable in production
