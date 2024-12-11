@@ -81,6 +81,7 @@ def save_recommendations():
 
 @app.route('/fetch-history/<user_id>', methods=['GET'])
 def fetch_history(user_id):
+    print(f"Fetching recommendations for userId: {user_id}")
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
@@ -93,6 +94,7 @@ def fetch_history(user_id):
         recommendations.extend(row[0].split(','))  # Assuming movies are stored as a comma-separated string
 
     conn.close()
+    print(f"Recommendations fetched: {recommendations}")
     return jsonify({"recommendations": recommendations})
 
 if __name__ == '__main__':
