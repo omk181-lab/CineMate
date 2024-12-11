@@ -13,26 +13,26 @@ movies_df = pd.read_csv("movies.csv")
 
 @app.route('/')
 def home():
-    # Get a list of popular movies (randomly selected for now)
-    popular_movies = movies_df.sample(10)  # Random selection of 10 movies
+    # Get a list of popular movies (random selection for now)
+    popular_movies = movies_df.sample(10)  # Random sample for movie list
     movies = popular_movies[['movieId', 'title']].to_dict(orient='records')
     return render_template('index.html', movies=movies)
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
     data = request.get_json()
-    user_id = int(data.get("userId"))
     movie_ratings = data.get("movieRatings", "")
 
     # Process user inputs
     if movie_ratings:
         for rating in movie_ratings.split(","):
             movie_id, user_rating = map(float, rating.split(":"))
+            # Add logic for handling new user ratings if needed
 
     # Generate recommendations
     all_movie_ids = movies_df['movieId'].unique()
     predictions = [
-        (movie_id, svd.predict(user_id, movie_id).est)
+        (movie_id, svd.predict(0, movie_id).est)  # Using a default user ID (0)
         for movie_id in all_movie_ids
     ]
     top_movies = sorted(predictions, key=lambda x: x[1], reverse=True)[:10]
@@ -61,6 +61,7 @@ def recommend_genres():
     recommended_titles = top_movies['title'].tolist()
 
     return jsonify({"recommendations": recommended_titles})
+
 
 if __name__ == '__main__':
     # Use Render's PORT environment variable in production
