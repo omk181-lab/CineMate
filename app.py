@@ -27,7 +27,6 @@ def recommend():
     if movie_ratings:
         for rating in movie_ratings.split(","):
             movie_id, user_rating = map(float, rating.split(":"))
-            # Add logic for handling new user ratings if needed
 
     # Generate recommendations
     all_movie_ids = movies_df['movieId'].unique()
@@ -36,12 +35,12 @@ def recommend():
         for movie_id in all_movie_ids
     ]
     top_movies = sorted(predictions, key=lambda x: x[1], reverse=True)[:10]
-    recommended_titles = [
-        movies_df[movies_df['movieId'] == movie_id]['title'].values[0]
-        for movie_id, _ in top_movies
-    ]
+    recommended_movies = movies_df[movies_df['movieId'].isin([movie_id for movie_id, _ in top_movies])]
 
-    return jsonify({"recommendations": recommended_titles})
+    # Add movie details
+    movies = recommended_movies[['title', 'genres', 'rating', 'release_year', 'language', 'poster_url']].to_dict(orient='records')
+
+    return jsonify({"recommendations": movies})
 
 @app.route('/recommend-genres', methods=['POST'])
 def recommend_genres():
