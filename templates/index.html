@@ -3,55 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineMate - Movie Recommendation System</title>
+    <title>Movie Recommendation System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <header>
-        <div class="navbar">
-            <h1>CineMate</h1>
-            <nav>
-                <a href="#">Home</a>
-                <a href="#preferences">Set Preferences</a>
-            </nav>
-        </div>
-    </header>
-    <main>
-        <section id="recommendations">
-            <h2>Recommended for You</h2>
-            <div class="movie-grid" id="movie-grid">
-                <!-- Movie cards will be dynamically populated here -->
+    <div class="container">
+        <h1>Movie Recommendation System</h1>
+        <form id="rating-form">
+            <h3>Rate the Following Movies:</h3>
+            <div id="movie-list">
+                {% for movie in movies %}
+                <div class="movie">
+                    <label>{{ movie['title'] }}</label>
+                    <select class="rating" data-movie-id="{{ movie['movieId'] }}">
+                        <option value="">Rate</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                {% endfor %}
             </div>
-        </section>
-        <section id="preferences">
-            <h2>Set Your Preferences</h2>
-            <form id="preferences-form">
-                <label for="genres">Favorite Genres:</label>
-                <select id="genres" name="genres" multiple>
-                    <option value="Action">Action</option>
-                    <option value="Comedy">Comedy</option>
-                    <option value="Drama">Drama</option>
-                    <option value="Horror">Horror</option>
-                    <option value="Romance">Romance</option>
-                </select>
 
-                <label for="rating-range">Preferred Rating Range:</label>
-                <input type="number" id="rating-min" name="rating-min" placeholder="Min (e.g., 4)">
-                <input type="number" id="rating-max" name="rating-max" placeholder="Max (e.g., 5)">
+            <button type="submit">Get Recommendations</button>
+        </form>
 
-                <label for="release-year">Year of Release:</label>
-                <input type="text" id="release-year" name="release-year" placeholder="e.g., 2010">
+        <h3>Or select your favorite genres:</h3>
+        <div id="genre-selection">
+            <label><input type="checkbox" name="genre" value="Action"> Action</label>
+            <label><input type="checkbox" name="genre" value="Comedy"> Comedy</label>
+            <label><input type="checkbox" name="genre" value="Drama"> Drama</label>
+            <label><input type="checkbox" name="genre" value="Romance"> Romance</label>
+            <label><input type="checkbox" name="genre" value="Horror"> Horror</label>
+            <label><input type="checkbox" name="genre" value="Sci-Fi"> Sci-Fi</label>
+        </div>
+        <button id="no-movies" type="button">I Haven't Watched These Movies</button>
 
-                <label for="language">Preferred Language:</label>
-                <input type="text" id="language" name="language" placeholder="e.g., English">
-
-                <button type="submit">Save Preferences</button>
-            </form>
-        </section>
-    </main>
-    <footer>
-        <p>©CineMate. All rights reserved.</p>
-    </footer>
+        <div id="recommendations"></div>
+    </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
