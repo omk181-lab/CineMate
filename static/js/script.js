@@ -1,7 +1,6 @@
 document.getElementById("rating-form").addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    const userId = document.getElementById("userId").value;
     const movieRatings = Array.from(document.querySelectorAll(".rating"))
         .filter(select => select.value) // Only include rated movies
         .map(select => `${select.dataset.movieId}:${select.value}`)
@@ -12,19 +11,11 @@ document.getElementById("rating-form").addEventListener("submit", async function
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId, movieRatings }),
+        body: JSON.stringify({ movieRatings }),
     });
 
     const data = await response.json();
-    const recommendationsDiv = document.getElementById("recommendations");
-
-    if (data.recommendations) {
-        recommendationsDiv.innerHTML = "<h3>Recommendations:</h3><ul>" +
-            data.recommendations.map(movie => `<li>${movie}</li>`).join("") +
-            "</ul>";
-    } else {
-        recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
-    }
+    displayRecommendations(data.recommendations);
 });
 
 document.getElementById("no-movies").addEventListener("click", async function () {
@@ -40,13 +31,16 @@ document.getElementById("no-movies").addEventListener("click", async function ()
     });
 
     const data = await response.json();
-    const recommendationsDiv = document.getElementById("recommendations");
+    displayRecommendations(data.recommendations);
+});
 
-    if (data.recommendations) {
+function displayRecommendations(recommendations) {
+    const recommendationsDiv = document.getElementById("recommendations");
+    if (recommendations.length > 0) {
         recommendationsDiv.innerHTML = "<h3>Recommendations:</h3><ul>" +
-            data.recommendations.map(movie => `<li>${movie}</li>`).join("") +
+            recommendations.map(movie => `<li>${movie}</li>`).join("") +
             "</ul>";
     } else {
         recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
     }
-});
+}
