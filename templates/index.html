@@ -9,29 +9,43 @@
 <body>
     <div class="container">
         <h1>Movie Recommendation System</h1>
-
-        <div id="user-section">
-            <h3>Are you a returning user?</h3>
-            <button id="new-user">New User</button>
-            <button id="existing-user">Existing User</button>
+        <form id="rating-form">
+            <label for="userId">User ID:</label>
+            <input type="text" id="userId" name="userId" required>
+            
+            <h3>Rate the Following Movies:</h3>
+            <div id="movie-list">
+                {% for movie in movies %}
+                <div class="movie">
+                    <label>{{ movie['title'] }}</label>
+                    <select class="rating" data-movie-id="{{ movie['movieId'] }}">
+                        <option value="">Rate</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <button type="submit">Get Recommendations</button>
+        </form>
+        
+        <div id="genre-selection">
+            <h3>Or Select Your Favorite Genres:</h3>
+            <div>
+                <label><input type="checkbox" name="genre" value="Action"> Action</label>
+                <label><input type="checkbox" name="genre" value="Comedy"> Comedy</label>
+                <label><input type="checkbox" name="genre" value="Drama"> Drama</label>
+                <label><input type="checkbox" name="genre" value="Romance"> Romance</label>
+                <label><input type="checkbox" name="genre" value="Horror"> Horror</label>
+                <label><input type="checkbox" name="genre" value="Sci-Fi"> Sci-Fi</label>
+            </div>
+            <button id="no-movies" type="button">I Haven't Watched These Movies</button>
         </div>
 
-        <!-- New User Section -->
-        <div id="new-user-section" style="display: none;">
-            <h3>Your User ID:</h3>
-            <p id="generatedUserId"></p>
-            <button id="copy-user-id">Copy User ID</button>
-            <button id="proceed-new-user">Proceed</button>
-        </div>
-
-        <!-- Existing User Section -->
-        <div id="existing-user-section" style="display: none;">
-            <label for="existingUserId">Enter Your User ID:</label>
-            <input type="text" id="existingUserId" placeholder="Enter your User ID">
-            <button id="fetch-history">Fetch Recommendations</button>
-        </div>
-
-        <!-- Recommendations Section -->
         <div id="recommendations"></div>
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
