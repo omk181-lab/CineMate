@@ -4,11 +4,12 @@ import pandas as pd
 import pickle
 import sqlite3
 import uuid
+
 app = Flask(__name__)
 
-# Database setup
 DATABASE = 'recommendation.db'
 
+# Initialize database
 def setup_database():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -43,58 +44,33 @@ def home():
 
 @app.route('/generate-user-id', methods=['GET'])
 def generate_user_id():
-    unique_id = str(uuid.uuid4())[:8]  # Generate a short unique ID
+    unique_id = str(uuid.uuid4())[:8]
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Check if User ID already exists
     cursor.execute("SELECT COUNT(*) FROM Users WHERE userId = ?", (unique_id,))
-    while cursor.fetchone()[0] > 0:  # If exists, regenerate
+    while cursor.fetchone()[0] > 0:
         unique_id = str(uuid.uuid4())[:8]
 
-    # Save the new User ID to the database
     cursor.execute("INSERT INTO Users (userId) VALUES (?)", (unique_id,))
     conn.commit()
     conn.close()
 
     return jsonify({"userId": unique_id})
 
-@app.route('/save-recommendations', methods=['POST'])
-def save_recommendations():
-    data = request.get_json()
-    user_id = data.get("userId")
-    recommendations = data.get("recommendations")  # List of recommended movies
-
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    # Save recommendations in the database
-    cursor.execute('''
-        INSERT INTO Recommendations (userId, recommended_movies)
-        VALUES (?, ?)
-    ''', (user_id, ','.join(recommendations)))
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({"status": "success"})
-
 @app.route('/fetch-history/<user_id>', methods=['GET'])
 def fetch_history(user_id):
-    print(f"Fetching recommendations for userId: {user_id}")
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Fetch recommendations for the given user
     cursor.execute("SELECT recommended_movies FROM Recommendations WHERE userId = ?", (user_id,))
     rows = cursor.fetchall()
 
     recommendations = []
     for row in rows:
-        recommendations.extend(row[0].split(','))  # Assuming movies are stored as a comma-separated string
+        recommendations.extend(row[0].split(','))
 
     conn.close()
-    print(f"Recommendations fetched: {recommendations}")
     return jsonify({"recommendations": recommendations})
 
 if __name__ == '__main__':
