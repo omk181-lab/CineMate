@@ -35,9 +35,7 @@ document.getElementById("preferences-form").addEventListener("submit", async fun
 
 function displayRecommendations(recommendations) {
     const recommendationsList = document.getElementById("recommendations-list");
-    recommendationsList.innerHTML = recommendations.map(
-        group => `
-        <h3>Since you liked "${group.likedMovie}" (Rating: ${group.likedRating}):</h3>
-        <ul>${group.recommendedMovies.map(movie => `<li>${movie}</li>`).join("")}</ul>`
-    ).join("");
+    recommendationsList.innerHTML = recommendations.length
+        ? recommendations.map(movie => `<p>${movie}</p>`).join("")
+        : "<p>No recommendations found based on your preferences.</p>";
 }
