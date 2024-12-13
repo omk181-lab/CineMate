@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personalized Movie Recommendation</title>
+    <title>CineMate</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -11,17 +11,17 @@
         <h1>CineMate</h1>
         <nav>
             <ul>
-                <li><a href="#recommendations">Home</a></li>
-                <li><a href="#preferences">Set Preferences</a></li>
+                <li><a href="#rate-movies">Rate Movies</a></li>
+                <li><a href="#genre-preferences">Set Preferences</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
-        <!-- Recommendations Section -->
-        <section id="recommendations">
+        <!-- Rate Movies Section -->
+        <section id="rate-movies">
+            <h2>Rate the Following Movies:</h2>
             <form id="rating-form">
-                <h3>Rate the Following Movies:</h3>
                 <div id="movie-list">
                     {% for movie in movies %}
                     <div class="movie">
@@ -33,7 +33,6 @@
                             <option value="2">2</option>
                             <option value="3">3</option>
                             <option value="4">4</option>
-                            <option value="5">5</option>
                         </select>
                     </div>
                     {% endfor %}
@@ -42,19 +41,35 @@
             </form>
         </section>
 
-        <!-- Preferences Section -->
-        <section id="preferences">
-            <h3>Or select your favorite genres:</h3>
-            <div id="genre-selection">
-                <label><input type="checkbox" name="genre" value="Action"> Action</label>
-                <label><input type="checkbox" name="genre" value="Comedy"> Comedy</label>
-                <label><input type="checkbox" name="genre" value="Drama"> Drama</label>
-                <label><input type="checkbox" name="genre" value="Romance"> Romance</label>
-                <label><input type="checkbox" name="genre" value="Horror"> Horror</label>
-                <label><input type="checkbox" name="genre" value="Sci-Fi"> Sci-Fi</label>
-            </div>
-            <button id="no-movies" type="button">I Haven't Watched These Movies</button>
-            <div id="recommendations"></div>
+        <!-- Genre Preferences Section -->
+        <section id="genre-preferences">
+            <h2>Set Your Preferences:</h2>
+            <form id="preferences-form">
+                <div id="genre-selection">
+                    <h3>Select Genres:</h3>
+                    <label><input type="checkbox" name="genre" value="Action"> Action</label>
+                    <label><input type="checkbox" name="genre" value="Comedy"> Comedy</label>
+                    <label><input type="checkbox" name="genre" value="Drama"> Drama</label>
+                    <label><input type="checkbox" name="genre" value="Romance"> Romance</label>
+                    <label><input type="checkbox" name="genre" value="Horror"> Horror</label>
+                    <label><input type="checkbox" name="genre" value="Sci-Fi"> Sci-Fi</label>
+                </div>
+
+                <h3>Preferred Release Year Range:</h3>
+                <input type="number" id="year-min" name="year-min" placeholder="e.g., 2000">
+                <input type="number" id="year-max" name="year-max" placeholder="e.g., 2020">
+
+                <h3>Preferred Rating Range:</h3>
+                <input type="number" step="0.1" id="rating-min" name="rating-min" placeholder="Min Rating (e.g., 3.0)">
+                <input type="number" step="0.1" id="rating-max" name="rating-max" placeholder="Max Rating (e.g., 5.0)">
+
+                <button type="submit">Get Recommendations</button>
+            </form>
+        </section>
+
+        <section id="recommendations">
+            <h2>Your Recommendations:</h2>
+            <div id="recommendations-list"></div>
         </section>
     </main>
 
