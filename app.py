@@ -38,6 +38,7 @@ def recommend_genres():
     rating_min = float(data.get("ratingMin", 0))
     rating_max = float(data.get("ratingMax", 5))
 
+    # Ensure genres are properly split and checked
     filtered_movies = movies_df[
         (movies_df["genres"].apply(lambda x: any(genre in x.split('|') for genre in genres))) &
         (movies_df["release_year"] >= year_min) &
@@ -47,7 +48,7 @@ def recommend_genres():
     ]
 
     if not filtered_movies.empty:
-        recommendations = filtered_movies.sample(min(10, len(filtered_movies)))["title"].tolist()
+        recommendations = filtered_movies.sort_values(by="rating", ascending=False).head(10)["title"].tolist()
     else:
         recommendations = []
 
