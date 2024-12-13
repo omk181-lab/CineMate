@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # Load the dataset and model
 movies_df = pd.read_csv("movies.csv")
-with open("svd_model_13_dec_2024.pkl", "rb") as f:
+with open("svd_model.pkl", "rb") as f:
     svd = pickle.load(f)
 
 @app.route("/")
@@ -48,12 +48,13 @@ def recommend_genres():
     ]
 
     if not filtered_movies.empty:
-        recommendations = filtered_movies.sort_values(by="rating", ascending=False).head(10)["title"].tolist()
+        recommendations = filtered_movies.sort_values(by="rating", ascending=False).head(10)
+        recommendations_list = recommendations.to_dict(orient="records")  # Return detailed information
     else:
-        recommendations = []
+        recommendations_list = []
 
-    return jsonify({"recommendations": recommendations})
-
+    return jsonify({"recommendations": recommendations_list})
+    
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
