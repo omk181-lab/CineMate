@@ -11,7 +11,7 @@ document.getElementById("rating-form").addEventListener("submit", async function
     });
 
     const data = await response.json();
-    displayRecommendations(data.recommendations);
+    displayRatingRecommendations(data.recommendations);
 });
 
 document.getElementById("preferences-form").addEventListener("submit", async function (event) {
@@ -30,12 +30,33 @@ document.getElementById("preferences-form").addEventListener("submit", async fun
     });
 
     const data = await response.json();
-    displayRecommendations(data.recommendations);
+    displayGenreRecommendations(data.recommendations);
 });
 
-function displayRecommendations(recommendations) {
+function displayRatingRecommendations(recommendations) {
     const recommendationsList = document.getElementById("recommendations-list");
     recommendationsList.innerHTML = recommendations.length
-        ? recommendations.map(movie => `<p>${movie}</p>`).join("")
+        ? recommendations.map(rec => `
+            <div>
+                <h3>Since you liked "${rec.likedMovie}" (Rating: ${rec.likedRating}):</h3>
+                <ul>
+                    ${rec.recommendedMovies.map(movie => `<li>${movie}</li>`).join("")}
+                </ul>
+            </div>
+        `).join("")
+        : "<p>No recommendations found based on your ratings.</p>";
+}
+
+function displayGenreRecommendations(recommendations) {
+    const recommendationsList = document.getElementById("recommendations-list");
+    recommendationsList.innerHTML = recommendations.length
+        ? recommendations.map(movie => `
+            <div>
+                <strong>${movie.title}</strong><br>
+                <em>Genre:</em> ${movie.genres}<br>
+                <em>Year:</em> ${movie.release_year}<br>
+                <em>Rating:</em> ${movie.rating}
+            </div>
+        `).join("<hr>")
         : "<p>No recommendations found based on your preferences.</p>";
 }
