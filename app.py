@@ -1,58 +1,52 @@
-import os
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import pickle
 
 app = Flask(__name__)
 
-# Load the trained model and datasets
-with open('svd_model_13_dec_2024.pkl', 'rb') as f:
+# Load the dataset and model
+movies_df = pd.read_csv("movies.csv")
+with open("svd_model_13_dec_2024.pkl", "rb") as f:
     svd = pickle.load(f)
 
-movies_df = pd.read_csv("movies.csv")
-
-@app.route('/')
+@app.route("/")
 def home():
-    popular_movies = movies_df[movies_df['release_year'] >= 2000].sample(10)
-    movies = popular_movies[['movieId', 'title']].to_dict(orient='records')
-    return render_template('index.html', movies=movies)
+    popular_movies = movies_df.sample(20).to_dict(orient="records")
+    return render_template("index.html", movies=popular_movies)
 
-@app.route('/recommend', methods=['POST'])
+@app.route("/recommend", methods=["POST"])
 def recommend():
     data = request.get_json()
-    movie_ratings = data.get("movieRatings", "")
+    ratings = data["ratings"]
+    recommendations = []
 
-    if movie_ratings:
-        for rating in movie_ratings.split(","):
-            movie_id, user_rating = map(float, rating.split(":"))
+    for rating in ratings:
+        liked_movie = movies_df[movies_df["movieId"] == int(rating["movieId"])].iloc[0]
+        recommended_ids = movies_df["movieId"].sample(5).tolist()
+        recommended_movies = movies_df[movies_df["movieId"].isin(recommended_ids)]["title"].tolist()
+        recommendations.append({"likedMovie": liked_movie["title"], "likedRating": rating["rating"], "recommendedMovies": recommended_movies})
 
-    all_movie_ids = movies_df[movies_df['release_year'] >= 2000]['movieId'].unique()
-    predictions = [
-        (movie_id, svd.predict(0, movie_id).est)
-        for movie_id in all_movie_ids
-    ]
-    top_movies = sorted(predictions, key=lambda x: x[1], reverse=True)[:10]
-    recommended_titles = [
-        movies_df[movies_df['movieId'] == movie_id]['title'].values[0]
-        for movie_id, _ in top_movies
-    ]
-    return jsonify({"recommendations": recommended_titles})
+    return jsonify({"recommendations": recommendations})
 
-@app.route('/recommend-genres', methods=['POST'])
+@app.route("/recommend-genres", methods=["POST"])
 def recommend_genres():
     data = request.get_json()
-    selected_genres = data.get("genres", [])
+    genres = data.get("genres", [])
+    year_min = int(data.get("yearMin", 0))
+    year_max = int(data.get("yearMax", 9999))
+    rating_min = float(data.get("ratingMin", 0))
+    rating_max = float(data.get("ratingMax", 5))
 
-    if not selected_genres:
-        return jsonify({"recommendations": []})
-
-    recommended_movies = movies_df[
-        (movies_df['release_year'] >= 2000) &
-        (movies_df['genres'].apply(lambda x: any(genre in x for genre in selected_genres)))
+    filtered_movies = movies_df[
+        (movies_df["genres"].apply(lambda x: any(genre in x for genre in genres))) &
+        (movies_df["release_year"] >= year_min) &
+        (movies_df["release_year"] <= year_max) &
+        (movies_df["rating"] >= rating_min) &
+        (movies_df["rating"] <= rating_max)
     ]
-    top_movies = recommended_movies.sample(10) if len(recommended_movies) > 10 else recommended_movies
-    recommended_titles = top_movies['title'].tolist()
-    return jsonify({"recommendations": recommended_titles})
+
+    recommendations = filtered_movies.sample(10)["title"].tolist()
+    return jsonify({"recommendations": recommendations})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
