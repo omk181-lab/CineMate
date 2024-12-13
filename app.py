@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # Load the dataset and model
 movies_df = pd.read_csv("movies.csv")
-with open("svd_model_13_dec_2024.pkl", "rb") as f:
+with open("svd_model.pkl", "rb") as f:
     svd = pickle.load(f)
 
 @app.route("/")
@@ -22,9 +22,10 @@ def recommend():
 
     for rating in ratings:
         liked_movie = movies_df[movies_df["movieId"] == int(rating["movieId"])].iloc[0]
-        recommended_ids = movies_df["movieId"].sample(5).tolist()
-        recommended_movies = movies_df[movies_df["movieId"].isin(recommended_ids)]["title"].tolist()
-        recommendations.append({"likedMovie": liked_movie["title"], "likedRating": rating["rating"], "recommendedMovies": recommended_movies})
+        if int(rating["rating"]) >= 3:  # Only consider ratings of 3 and 4
+            recommended_ids = movies_df["movieId"].sample(5).tolist()
+            recommended_movies = movies_df[movies_df["movieId"].isin(recommended_ids)]["title"].tolist()
+            recommendations.append({"likedMovie": liked_movie["title"], "likedRating": rating["rating"], "recommendedMovies": recommended_movies})
 
     return jsonify({"recommendations": recommendations})
 
@@ -38,14 +39,18 @@ def recommend_genres():
     rating_max = float(data.get("ratingMax", 5))
 
     filtered_movies = movies_df[
-        (movies_df["genres"].apply(lambda x: any(genre in x for genre in genres))) &
+        (movies_df["genres"].apply(lambda x: any(genre in x.split('|') for genre in genres))) &
         (movies_df["release_year"] >= year_min) &
         (movies_df["release_year"] <= year_max) &
         (movies_df["rating"] >= rating_min) &
         (movies_df["rating"] <= rating_max)
     ]
 
-    recommendations = filtered_movies.sample(10)["title"].tolist()
+    if not filtered_movies.empty:
+        recommendations = filtered_movies.sample(min(10, len(filtered_movies)))["title"].tolist()
+    else:
+        recommendations = []
+
     return jsonify({"recommendations": recommendations})
 
 if __name__ == '__main__':
