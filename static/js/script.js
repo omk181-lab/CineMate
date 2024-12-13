@@ -1,29 +1,32 @@
 document.getElementById("rating-form").addEventListener("submit", async function (event) {
     event.preventDefault();
-
-    const movieRatings = Array.from(document.querySelectorAll(".rating"))
-        .filter(select => select.value)
-        .map(select => `${select.dataset.movieId}:${select.value}`)
-        .join(",");
+    const ratings = Array.from(document.querySelectorAll(".rating"))
+        .filter(rating => rating.value)
+        .map(rating => ({ movieId: rating.dataset.movieId, rating: rating.value }));
 
     const response = await fetch("/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ movieRatings }),
+        body: JSON.stringify({ ratings }),
     });
 
     const data = await response.json();
     displayRecommendations(data.recommendations);
 });
 
-document.getElementById("no-movies").addEventListener("click", async function () {
-    const selectedGenres = Array.from(document.querySelectorAll("input[name='genre']:checked"))
+document.getElementById("preferences-form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const genres = Array.from(document.querySelectorAll("input[name='genre']:checked"))
         .map(checkbox => checkbox.value);
+    const yearMin = document.getElementById("year-min").value;
+    const yearMax = document.getElementById("year-max").value;
+    const ratingMin = document.getElementById("rating-min").value;
+    const ratingMax = document.getElementById("rating-max").value;
 
     const response = await fetch("/recommend-genres", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ genres: selectedGenres }),
+        body: JSON.stringify({ genres, yearMin, yearMax, ratingMin, ratingMax }),
     });
 
     const data = await response.json();
@@ -31,12 +34,10 @@ document.getElementById("no-movies").addEventListener("click", async function ()
 });
 
 function displayRecommendations(recommendations) {
-    const recommendationsDiv = document.getElementById("recommendations");
-    if (recommendations.length > 0) {
-        recommendationsDiv.innerHTML = "<h3>Recommendations:</h3><ul>" +
-            recommendations.map(movie => `<li>${movie}</li>`).join("") +
-            "</ul>";
-    } else {
-        recommendationsDiv.innerHTML = "<p>No recommendations available.</p>";
-    }
+    const recommendationsList = document.getElementById("recommendations-list");
+    recommendationsList.innerHTML = recommendations.map(
+        group => `
+        <h3>Since you liked "${group.likedMovie}" (Rating: ${group.likedRating}):</h3>
+        <ul>${group.recommendedMovies.map(movie => `<li>${movie}</li>`).join("")}</ul>`
+    ).join("");
 }
