@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # Load the dataset and model
 movies_df = pd.read_csv("movies.csv")
-with open("svd_model.pkl", "rb") as f:
+with open("svd_model_13_dec_2024.pkl", "rb") as f:
     svd = pickle.load(f)
 
 @app.route("/")
