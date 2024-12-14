@@ -22,18 +22,21 @@
         <section id="rate-movies">
             <h2>Rate the Following Movies:</h2>
             <form id="rating-form">
-                <div id="movie-list">
+                <div id="movie-list" class="grid">
                     {% for movie in movies %}
-                    <div class="movie">
-                        <img src="{{ movie['poster'] }}" alt="{{ movie['title'] }}" class="movie-poster">
-                        <label>{{ movie['title'] }}</label>
-                        <select class="rating" data-movie-id="{{ movie['movieId'] }}">
-                            <option value="">Rate</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                        </select>
+                    <div class="movie-tile">
+                        <h3>{{ movie['title'] }}</h3>
+                        <p><strong>Year:</strong> {{ movie['release_year'] }}</p>
+                        <p><strong>Genre:</strong> {{ movie['genres'] }}</p>
+                        <p><strong>Rating:</strong>
+                            <select class="rating" data-movie-id="{{ movie['movieId'] }}">
+                                <option value="">Rate</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </p>
                     </div>
                     {% endfor %}
                 </div>
